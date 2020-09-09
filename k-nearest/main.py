@@ -72,7 +72,7 @@ def k_nearest_neighbour(k, data_point, training_set, training_labels):
 
 
 
-# def find_best_k(validation_set, validation_labels, data_set, data_labels):
+def find_best_k(validation_set, validation_labels, data_set, data_labels):
     # voor elke 1 tot len val_set (K)
     #     test elk element val_set en check of classification klopt
     #     tell dan 1 bij match
@@ -81,29 +81,21 @@ def k_nearest_neighbour(k, data_point, training_set, training_labels):
 
 
 
-#     best_k = 0
-#     highest_value = 0.0
+    best_k = 0
+    highest_value = 0.0
 
-#     for k in range(1, len(validation_set)):
+    accurateness = {}
+    for k in range(1, len(validation_set)):
+        print("yeet")
+        matches = 0
+        for validation_point, validation_label in zip(validation_set, validation_labels):
+            if validation_label == k_nearest_neighbour(k, validation_point, data_set, data_labels):
+                matches += 1
+        accurateness[k] = matches / len(validation_set) * 100
 
-#     for k in range(1, len(v_set)):
-#         classifications = []
-#         for validation_point in v_set:
-#             classifications.append(k_nearest_neighbour(k, validation_point,
-#                                                        t_set, t_labels))
-#         print("done11111")
-#         matches: int = 0
-#         for classification_index, _ in enumerate(classifications):
-#             if classifications[classification_index] == v_labels[classification_index]:
-#                 matches += 1
-#         res: float = matches * 100 / len(v_labels)
-        
+    return accurateness
 
-#         if res > highest_value:
-#             highest_value = res
-#             best_k = k
-    
-#     return highest_k
+
 
 
 
@@ -118,7 +110,9 @@ if __name__ == '__main__':
     normalized_val_data = normalize(validation_set, normalize_range)
 
     #best_k = find_best_k(normalized_data, data_labels, normalized_val_data, validation_labels)
-    print(k_nearest_neighbour(3,normalized_val_data[0], normalized_data, data_labels))
+   # print(k_nearest_neighbour(3,normalized_val_data[0], normalized_data, data_labels))
+    print(find_best_k(normalized_val_data, validation_labels, normalized_data, data_labels))
+
 
     np.set_printoptions(threshold=np.inf)
     #print(np.round(normalized_data, 2))

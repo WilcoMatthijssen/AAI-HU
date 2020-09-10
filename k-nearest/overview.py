@@ -23,22 +23,13 @@ def get_distance(point_a, point_b):
 
 
 def get_normalisation(data_set):
-    """ Loads a csv file for use by k_nn
-          Args:
-              data_set: list of points
-          Returns:
-              tuple[list,list]: List of highest values in each column and a list of the lowest value in each column.
+    """ Finds the normalisation of data_set and returns it as a List of highest values for each attribute
+        and a list of the lowest value for each attribute.
     """
 
 
 def normalize(data_set, norm_range):
-    """ Loads a csv file for use by k_nn
-          Args:
-              data_set: data to normalize
-              norm_range: tuple containing highest and lowest value for each column of data
-          Returns:
-              list: A list of normalized data_set
-          """
+    """ Applies norm_range to the data_set to normalize it."""
 
 
 def k_nearest_neighbour(k, data_point, training_set, training_labels):

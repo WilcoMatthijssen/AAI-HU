@@ -54,3 +54,24 @@ def find_best_k(validation_set, validation_labels, data_set, data_labels):
     Returns:
         int: k with best accuracy
     """
+
+if __name__ == '__main__':
+    # load data from csv
+    data_set, data_labels = load_data(r'dataset1.csv')
+    validation_set, validation_labels = load_data(r'validation1.csv')
+    days, _ = load_data(r'days.csv')
+
+    # get normalisation range
+    normalize_range = get_normalisation(data_set)
+
+    # normalize sets
+    normalize(data_set, normalize_range)
+    normalize(validation_set, normalize_range)
+    normalize(days, normalize_range)
+
+    # find best k
+    best_k = find_best_k(data_set, data_labels, validation_set, validation_labels)
+
+    # Apply best_k to days that we do not have the date of and guess the season.
+    season_guesses = [k_nearest_neighbour(best_k, day, validation_set, validation_labels) for day in days]
+    print(season_guesses)

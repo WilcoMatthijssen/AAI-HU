@@ -48,8 +48,11 @@ def load_data(filename):
 
 def get_centroid_from_data(data,colNum):
     """
-    Returns all the values from a given colums (Vertical)
+    Returns all the values from a given columns (Vertical)
     """
+    # Transpose data zodat rijen kolommen worden en return kolom op index van colNum
+    # return list(data.T[colNum])
+
     setOfPoints = []
     for i in range(len(data)):
         setOfPoints.append(data[i][colNum])
@@ -60,6 +63,26 @@ def generate_random_number(max_value):
     Generates a random number with a max value.
     """
     return random.randint(0,max_value)
+
+
+def get_distance(point_a, point_b):
+    """ Calculates distance between point_a and point_b """
+    distance = 0.0
+    for ax, bx in zip(point_a, point_b):
+        distance += pow(ax - bx, 2)
+    return np.sqrt(distance)
+
+
+def find_nearest_centroid(data_point, centroids):
+    """ Finds the nearest centroid with the use of get_distance. """
+    # maak list met alle afstanden tussen het data_point en centroids
+    distances = [get_distance(data_point, centroid) for centroid in centroids]
+
+    # pak index van laagste waarde/afstand
+    nearest_centroid_index = np.argmin(distances)
+    return centroids[nearest_centroid_index]
+
+
 
 def place_centroids_at_random(setOfPoints, amountOfCentroids):
     """
@@ -81,7 +104,13 @@ def k_means(k, data_set):
     return centroids, setOfPoints
     
 if __name__ == '__main__':
+    # volgens inlever pdf moet je bij random een seed gebruiken
+    random.seed(69420)
+
     # load data from csv
     data_set, data_labels = load_data(r'dataset1.csv')
     k = 5
-    k_means(k,data_set)
+    print(k_means(k,data_set))
+
+    # random probeersel
+    print(find_nearest_centroid(data_set[0], [data_set[30], data_set[20]]))

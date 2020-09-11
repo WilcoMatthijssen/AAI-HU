@@ -76,7 +76,7 @@ def get_distance(point_a, point_b):
 def find_nearest_centroid(data_point, centroids):
     """ Finds the nearest centroid with the use of get_distance. """
     # maak list met alle afstanden tussen het data_point en centroids
-    distances = [get_distance(data_point, centroid) for centroid in centroids]
+    distances = (get_distance(data_point, centroid) for centroid in centroids)
 
     # pak index van laagste waarde/afstand
     nearest_centroid_index = np.argmin(distances)

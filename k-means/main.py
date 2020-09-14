@@ -123,12 +123,12 @@ if __name__ == '__main__':
     #np.set_printoptions(threshold=np.inf)
 
     diff = {}
-    for k in range(1,10):
+    for k in range(2,10):
         clusters = k_means(k, data_points)
         cluster_sizes = [len(cluster) for cluster in clusters]
-        print(k)
-        diff["k{}".format(k)] = max(cluster_sizes) - min(cluster_sizes)
-
-    print(diff)
+        print("k {} done".format(k))
+        diff["k{}".format(k)] = np.std(cluster_sizes)
+    best_k = min(diff, key=diff.get)
+    print("{} is the best k".format(best_k))
 
 

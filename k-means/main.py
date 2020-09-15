@@ -85,7 +85,7 @@ def k_means(k, data_points, max_iters=100):
         clusters = cluster_data(data_points, centroids)
         new_centroids = get_centroids_from_clusters(clusters)
         if (centroids == new_centroids).all():
-            return clusters
+            return clusters, centroids
         else:
             centroids = new_centroids
 
@@ -111,10 +111,10 @@ if __name__ == '__main__':
     random.seed(69)
 
     # load data from csv
-    data_points, data_labels = load_data(r'k-means\validation1.csv')
+    data_points, data_labels = load_data(r'dataset1.csv')
 
     # Result of k_means
-    result = k_means(k=4, data_points=data_points)
+    result, centroids = k_means(k=4, data_points=data_points)
 
     # Maximum vote principle to cluster the data into the 4 different seasons
     season_clusters = cluster_data_into_seasons(result, data_points, data_labels)
@@ -124,13 +124,17 @@ if __name__ == '__main__':
     #np.set_printoptions(threshold=np.inf)
 
     diff = {}
-    for k in range(2,100):
-        clusters = k_means(k, data_points)
-        cluster_sizes = [len(cluster) for cluster in clusters]
-        diff[k] = np.std(cluster_sizes)
+    for k in range(2,50):
+        cluster_dist=[]
+
+        clusters, centroids = k_means(k, data_points)
+        for cluster, centroid in zip(clusters, centroids):
+            cluster_dist.append( sum([get_distance(point, centroid)**2 for point in cluster]))
+        diff[k] = np.mean(cluster_dist)
 
     #Scree Plot
     lists = sorted(diff.items())
+    print(*lists)
     x,y = zip(*lists)
     plt.xlabel('k')
     plt.ylabel('value')

@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 
 """
 1.Select 'Centroids' (K) initial clusters.
@@ -110,25 +111,28 @@ if __name__ == '__main__':
     random.seed(69)
 
     # load data from csv
-    data_points, data_labels = load_data(r'validation1.csv')
+    data_points, data_labels = load_data(r'k-means\validation1.csv')
 
     # Result of k_means
     result = k_means(k=4, data_points=data_points)
 
     # Maximum vote principle to cluster the data into the 4 different seasons
     season_clusters = cluster_data_into_seasons(result, data_points, data_labels)
-    for season in season_clusters:
-        print(season)
+    # for season in season_clusters:
+    #     print(season)
 
     #np.set_printoptions(threshold=np.inf)
 
     diff = {}
-    for k in range(2,10):
+    for k in range(2,100):
         clusters = k_means(k, data_points)
         cluster_sizes = [len(cluster) for cluster in clusters]
-        print("k {} done".format(k))
-        diff["k{}".format(k)] = np.std(cluster_sizes)
-    best_k = min(diff, key=diff.get)
-    print("{} is the best k".format(best_k))
+        diff[k] = np.std(cluster_sizes)
 
-
+    #Scree Plot
+    lists = sorted(diff.items())
+    x,y = zip(*lists)
+    plt.xlabel('k')
+    plt.ylabel('value')
+    plt.plot(x,y)
+    plt.show()

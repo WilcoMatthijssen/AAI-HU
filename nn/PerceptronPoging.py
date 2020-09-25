@@ -2,27 +2,29 @@ import numpy as np
 import random
 
 class Perceptron:
-    def __init__(self, train_data, train_labels, epochs, learn_rate):
-        self.train_data = train_data
-        self.train_labels = train_labels
+    def __init__(self, learn_data, learn_labels, epochs, learn_rate):
+        self.learn_data = learn_data
+        self.learn_labels = learn_labels
         self.epochs = epochs
         self.learn_rate = learn_rate
 
         self.bias = 0.00
-        self.weights = np.array([random.uniform(-1, 1) for _ in range(len(train_data[0]))])
+        self.weights = np.array([random.uniform(-1, 1) for _ in range(len(learn_data[0]))])
         #self.weights = np.zeros(len(train_data[0]))
 
-    def predict(self, data):
-        total = np.dot(data, self.weights) + self.bias
+    def predict(self, item):
+        total = np.dot(item, self.weights) + self.bias
         #return 1 if total > 0 else 0
         return 1/(1 + np.exp(-total))
 
     def train(self):
         for _ in range(self.epochs):
-            for train_sample, train_label in zip(self.train_data, self.train_labels):
+            for item, target in zip(self.learn_data, self.learn_labels):
 
-                prediction = self.predict(train_sample)
-                self.weights += self.learn_rate * (train_label - prediction) * train_sample
+                prediction = self.predict(item)
+                update = (target - prediction) * self.learn_rate
+                self.bias += update
+                self.weights += update * item
 
 
 
@@ -70,7 +72,7 @@ if __name__ == "__main__":
     n.train()
 
     print(n.unique_labels)
-    print(n.predict(data[44]))
+    print(n.predict(data[110]))
 
 
 

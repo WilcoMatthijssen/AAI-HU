@@ -10,7 +10,9 @@ class Perceptron:
 
         self.bias = 0.00
         self.weights = np.array([random.uniform(-1, 1) for _ in range(len(learn_data[0]))])
-        #self.weights = np.zeros(len(train_data[0]))
+        #self.weights = np.zeros(len(learn_data[0]))
+
+
 
     def predict(self, item):
         total = np.dot(item, self.weights) + self.bias
@@ -68,11 +70,13 @@ if __name__ == "__main__":
     data, labels = data_from_csv_file("iris.data")
     normalize(data)
 
-    n = NN(data, labels, 100, 0.1)
+    n = NN(data, labels, 10, 0.1)
     n.train()
 
     print(n.unique_labels)
-    print(n.predict(data[110]))
+
+    # RNG
+    print(n.predict(data[70]))
 
 
 

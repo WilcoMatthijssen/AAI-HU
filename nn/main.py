@@ -4,10 +4,12 @@ import random
 
 
 def sigmoid(x):
+    """ Returns sigmoid of x. """
     return 1 / (1 + np.exp(-x))
 
 
 def sigmoid_der(x):
+    """ Returns sigmoid derivative of x. """
     return sigmoid(x) * (1 - sigmoid(x))
 
 
@@ -25,7 +27,6 @@ class Neuron:
         self.output = 0
         self.neuron_input = 0
 
-
     def feed_forward(self):
         self.neuron_input = sum(val.output * w for val, w in zip(self.previous_layer, self.weights))
         if self.is_sigmoid:
@@ -36,6 +37,7 @@ class Neuron:
         return self.output
 
     def update(self, learn_rate):
+        """ Update weights and bias. """
         for i in range(len(self.weights)):
             self.weights[i] += learn_rate * self.error * self.previous_layer[i].output
 
@@ -45,6 +47,7 @@ class Neuron:
 class NeuralNetwork:
 
     def __init__(self, input_layer_size, output_layers_size, is_sigmoid, learn_rate):
+        """ Initializes all layers to train and classify data with. """
         self.learn_rate = learn_rate
 
         self.input_layers = [Neuron() for _ in range(input_layer_size)]
@@ -62,6 +65,7 @@ class NeuralNetwork:
                 Neuron(is_sigmoid, weights, random.uniform(-1, 1), random.uniform(-1, 1), self.hidden_layers))
 
     def predict(self, input_data):
+        """ Predicts classification of input_data which is a list the length of self.output_layers. """
         for input_l, input_d in zip(self.input_layers, input_data):
             input_l.output = input_d
 
@@ -79,6 +83,7 @@ class NeuralNetwork:
             self.hidden_layers[i].error = sigmoid_der(self.hidden_layers[i].neuron_input) * error_sum
 
     def update(self):
+        """ Updates weights and bias of hidden and output layers. """
         for o_layer in self.output_layers:
             o_layer.update(self.learn_rate)
 
@@ -86,6 +91,7 @@ class NeuralNetwork:
             h_layer.update(self.learn_rate)
 
     def train(self, input_data, desired_output, epochs):
+        """ Trains layers with input_data and desired_output to get to classify similar data correctly times epochs. """
         for _ in range(epochs):
             for data_in, data_out in zip(input_data, desired_output):
                 self.predict(data_in)
@@ -94,12 +100,14 @@ class NeuralNetwork:
 
 
 def get_dataset(filename):
+    """ Load data and outputs from file. """
     data = np.genfromtxt(filename, delimiter=",", usecols=[0, 1, 2, 3])
     outputs = np.genfromtxt(filename, delimiter=",", usecols=[4], dtype=str)
     return data, outputs
 
 
 def serialize_outputs(outputs):
+    """ Convert types to list of length of types where correct type is 1 and incorrect is 0. """
     serialized_outputs = []
 
     for data_output in outputs:
@@ -111,15 +119,16 @@ def serialize_outputs(outputs):
             serialized_outputs.append(np.array([0, 0, 1]))
     return np.array(serialized_outputs)
 
-
 if __name__ == "__main__":
     random.seed(0)
+
     data, outputs = get_dataset("iris.data")
 
     serialized_outputs = serialize_outputs(outputs)
 
-    nn = NeuralNetwork(4, 3, True, 0.1)
-    nn.train(data, serialized_outputs, 350)
+    # learn_rate 0.25600001 and epochs > 5999 = 99.333333333% accurate
+    nn = NeuralNetwork(4, 3, True, 0.25600001)
+    nn.train(data, serialized_outputs, 10)
 
     print(f"Training took {time.perf_counter():0.2f} seconds")
 
@@ -127,7 +136,7 @@ if __name__ == "__main__":
     actual = np.array([np.argmax(output) for output in serialized_outputs])
     print("NN was: ", (np.count_nonzero(guess == actual) / len(data) * 100), "% correct")
 
-    index = 40
+    index = 101
     print(f"\nindex {index} is {outputs[index]}")
     tempNetworkOutput = nn.predict(data[index])
     print(round(tempNetworkOutput[0], 2) * 100, "% Iris-Setosa")

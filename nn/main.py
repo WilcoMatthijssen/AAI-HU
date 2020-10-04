@@ -15,25 +15,22 @@ def sigmoid_der(x):
 
 class Neuron:
 
-    def __init__(self, is_sigmoid=True, weights=None, threshold=None, bias=None, previous_layer=None):
+    def __init__(self, weights=None, previous_layer=None):
         """ Set parameters for Neuron (use default params for input layer). """
         self.previous_layer = previous_layer
         self.weights = weights
-        self.bias = bias
-        self.threshold = threshold
-        self.is_sigmoid = is_sigmoid
+        self.bias = random.uniform(-1, 1)
+        self.threshold = random.uniform(-1, 1)
 
         self.error = 0
         self.output = 0
         self.neuron_input = 0
 
     def feed_forward(self):
+        """ feeds forward weights by calculating neuron_input and output. """
         self.neuron_input = sum(val.output * w for val, w in zip(self.previous_layer, self.weights))
-        if self.is_sigmoid:
-            self.neuron_input += self.bias
-            self.output = sigmoid(self.neuron_input)
-        else:
-            self.output = 1 if self.neuron_input >= self.threshold else 0
+        self.neuron_input += self.bias
+        self.output = sigmoid(self.neuron_input)
         return self.output
 
     def update(self, learn_rate):
@@ -46,7 +43,7 @@ class Neuron:
 
 class NeuralNetwork:
 
-    def __init__(self, input_layer_size, output_layers_size, is_sigmoid, learn_rate):
+    def __init__(self, input_layer_size, output_layers_size, learn_rate):
         """ Initializes all layers to train and classify data with. """
         self.learn_rate = learn_rate
 
@@ -56,25 +53,26 @@ class NeuralNetwork:
         for i in range(input_layer_size):
             weights = [random.uniform(-1, 1) for _ in range(input_layer_size)]
             self.hidden_layers.append(
-                Neuron(is_sigmoid, weights, random.uniform(-1, 1), random.uniform(-1, 1), self.input_layers))
+                Neuron(weights, self.input_layers))
 
         self.output_layers = []
         for i in range(output_layers_size):
             weights = [random.uniform(-1, 1) for _ in range(input_layer_size)]
             self.output_layers.append(
-                Neuron(is_sigmoid, weights, random.uniform(-1, 1), random.uniform(-1, 1), self.hidden_layers))
+                Neuron(weights, self.hidden_layers))
 
     def predict(self, input_data):
         """ Predicts classification of input_data which is a list the length of self.output_layers. """
-        for input_l, input_d in zip(self.input_layers, input_data):
-            input_l.output = input_d
+        for layer, data in zip(self.input_layers, input_data):
+            layer.output = data
 
-        for hidden in self.hidden_layers:
-            hidden.feed_forward()
+        for layer in self.hidden_layers:
+            layer.feed_forward()
 
         return [out.feed_forward() for out in self.output_layers]
 
     def backpropagation(self, desired_output):
+        """ Back propagates the error of the hidden and output layers. """
         for i in range(len(self.output_layers)):
             self.output_layers[i].error = (desired_output[i] - self.output_layers[i].output) * sigmoid_der(self.output_layers[i].neuron_input)
 
@@ -108,16 +106,15 @@ def get_dataset(filename):
 
 def serialize_outputs(outputs):
     """ Convert types to list of length of types where correct type is 1 and incorrect is 0. """
-    serialized_outputs = []
+    return [np.array(np.unique(outputs) == name).astype(int) for name in outputs]
 
-    for data_output in outputs:
-        if data_output == "Iris-setosa":
-            serialized_outputs.append(np.array([1, 0, 0]))
-        if data_output == "Iris-versicolor":
-            serialized_outputs.append(np.array([0, 1, 0]))
-        if data_output == "Iris-virginica":
-            serialized_outputs.append(np.array([0, 0, 1]))
-    return np.array(serialized_outputs)
+def normalize(data):
+    """ Normalize data """
+    max_values = [np.max(column) for column in data.T]
+    min_values = [np.min(column) for column in data.T]
+    for feature in data:
+        for i in range(len(feature)):
+            feature[i] = (feature[i] - min_values[i]) / (max_values[i] - min_values[i])
 
 if __name__ == "__main__":
     random.seed(0)
@@ -126,9 +123,11 @@ if __name__ == "__main__":
 
     serialized_outputs = serialize_outputs(outputs)
 
+    #normalize(data)
+
     # learn_rate 0.25600001 and epochs > 5999 = 99.333333333% accurate
-    nn = NeuralNetwork(4, 3, True, 0.25600001)
-    nn.train(data, serialized_outputs, 10)
+    nn = NeuralNetwork(4, 3, 0.25600001)
+    nn.train(data, serialized_outputs, 60)
 
     print(f"Training took {time.perf_counter():0.2f} seconds")
 
@@ -138,8 +137,9 @@ if __name__ == "__main__":
 
     index = 101
     print(f"\nindex {index} is {outputs[index]}")
-    tempNetworkOutput = nn.predict(data[index])
-    print(round(tempNetworkOutput[0], 2) * 100, "% Iris-Setosa")
-    print(round(tempNetworkOutput[1], 2) * 100, "% Iris-Versicolor")
-    print(round(tempNetworkOutput[2], 2) * 100, "% Iris-Virginica\n")
+    predicition= nn.predict(data[index])
+    print(round(predicition[0], 2) * 100, "% Iris-Setosa")
+    print(round(predicition[1], 2) * 100, "% Iris-Versicolor")
+    print(round(predicition[2], 2) * 100, "% Iris-Virginica\n")
+
 

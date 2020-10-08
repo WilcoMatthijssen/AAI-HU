@@ -123,11 +123,11 @@ if __name__ == "__main__":
 
     serialized_outputs = serialize_outputs(outputs)
 
-    #normalize(data)
+    normalize(data)
 
     # learn_rate 0.25600001 and epochs > 5999 = 99.333333333% accurate
-    nn = NeuralNetwork(4, 3, 0.25600001)
-    nn.train(data, serialized_outputs, 60)
+    nn = NeuralNetwork(input_layer_size=4, output_layers_size=3, learn_rate=0.2)
+    nn.train(input_data=data, desired_output=serialized_outputs, epochs=100)
 
     print(f"Training took {time.perf_counter():0.2f} seconds")
 
@@ -137,9 +137,9 @@ if __name__ == "__main__":
 
     index = 101
     print(f"\nindex {index} is {outputs[index]}")
-    predicition= nn.predict(data[index])
-    print(round(predicition[0], 2) * 100, "% Iris-Setosa")
-    print(round(predicition[1], 2) * 100, "% Iris-Versicolor")
-    print(round(predicition[2], 2) * 100, "% Iris-Virginica\n")
+    prediction = nn.predict(data[index])
+    print(round(prediction[0], 2) * 100, "% Iris-Setosa")
+    print(round(prediction[1], 2) * 100, "% Iris-Versicolor")
+    print(round(prediction[2], 2) * 100, "% Iris-Virginica\n")
 
 

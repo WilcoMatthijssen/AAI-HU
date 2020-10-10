@@ -1,30 +1,31 @@
 import random
-import numpy as np
 
 
-def get_population(size):
+def create_population(size):
+    """ creates a random population by the size of size. """
     return [[random.randint(0,63) for _ in range(4)] for _ in range(size)]
 
 
-def fitness(specimen, target):
+def fitness(specimen):
+    """ Get fitness of specimen. """
     A, B, C, D = specimen
-    lift = pow((A-B), 2) + pow((C+D), 2) - pow((A-30), 3) - pow((C-40), 3)
-    return abs(target - lift)
+    return pow((A-B), 2) + pow((C+D), 2) - pow((A-30), 3) - pow((C-40), 3)
 
 
-def grade(populi, target):
-    # print(populi)
-    return np.average([fitness(specimen, target) for specimen in populi])
+def grade(populi):
+    """ Gets average fitness of populi. """
+    return sum([fitness(specimen) for specimen in populi]) / len(populi)
 
 
-def evolve(populi, target, retain, random_select, mutate):
-    graded = [(fitness(specimen, target), specimen) for specimen in populi]
+def evolve(populi, retain, random_select, mutate):
+    """ Evolves the populi by the best performing ones with configurable randomness. """
+    graded = [(fitness(specimen), specimen) for specimen in populi]
     graded = [x[1] for x in sorted(graded)]
 
     retain_size = int(len(graded)*retain)
-    parents = graded[:retain_size]
+    parents = graded[retain_size:]
 
-    for specimen in graded[retain_size:]:
+    for specimen in graded[:retain_size]:
         if random_select > random.random():
             parents.append(specimen)
 
@@ -38,22 +39,24 @@ def evolve(populi, target, retain, random_select, mutate):
             mutated_pos = random.randint(0, len(child)-1)
             child[mutated_pos] = random.randint(min(child), max(child))
 
-    parents.extend(children)
+    parents += children
     return parents
 
 
 if __name__ == '__main__':
     # Gekozen voor opdracht 6.2
-
     random.seed(0)
 
-    populi = get_population(1000)
-    target = 63*4
-    fitness_history = [grade(populi, target)]
+    populi = create_population(size=10_000)
+    fitness_history = [grade(populi)]
 
-    for _ in range(10):
-        populi = evolve(populi=populi, target=target, retain=0.1, random_select=0.05, mutate=0.1)
-        score = grade(populi, target)
+    print("start", fitness_history[-1])
+
+    for _ in range(25):
+        populi = evolve(populi=populi, retain=0.5, random_select=0.0, mutate=0.5)
+        score = grade(populi)
         fitness_history.append(score)
-        print(f"Gemiddeld {score} van het target af.")
+        #print(f"{score} is de gemiddelde score.")
+
+    print("end", fitness_history[-1])
 

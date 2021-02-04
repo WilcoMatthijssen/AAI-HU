@@ -1,6 +1,7 @@
 import numpy as np
 from collections import Counter
-
+import time
+from functools import lru_cache
 
 def load_data(filename):
     """ Loads a csv file for use by k_nn
@@ -30,63 +31,48 @@ def load_data(filename):
             labels.append("herfst")
         else:  # from 01-12 to end of year
             labels.append("winter")
-    return data, labels
-
-
-def get_distance(point_a, point_b):
-    """ Calculates distance between point a and b
-          Args:
-              point_a: list of features of a
-              point_b: list of features of b
-          Returns:
-              float: distance between point a and b
-    """
-    distance = 0.0
-    for ax, bx in zip(point_a, point_b):
-        distance += pow(ax - bx, 2)
-    return distance
+    return data, tuple(labels)
 
 
 def get_normalisation(data_set):
     """ Finds the normalisation of data_set and returns it as a List of highest values for each attribute
         and a list of the lowest value for each attribute.
     """
-    max_values = [np.max(column) for column in data_set.T]
-    min_values = [np.min(column) for column in data_set.T]
+    max_values = np.array([np.max(column) for column in data_set.T])
+    min_values = np.array([np.min(column) for column in data_set.T])
     return max_values, min_values
 
 
 def normalize(data_set, norm_range):
     """ Applies norm_range to the data_set to normalize it."""
     max_values, min_values = norm_range
-
     for feature in data_set:
         for i in range(len(feature)):
             feature[i] = (feature[i] - min_values[i]) / (max_values[i] - min_values[i])
 
 
+def get_distance(point_a, point_b):
+    """ Gets distance between 2 points """
+    return np.sum(np.square(np.array(point_a) - np.array(point_b)))
+
+
 def k_nearest_neighbour(k, data_point, training_set, training_labels):
-    """Finds the k nearest neighbour points to data_point from training_set
-    Args:
-        k: nearest neighbour count
-        data_point: a list of features to classify
-        training_set: the training set from which to find the nearest points
-        training_labels: list of labels to assign to t_point from
-    Returns:
-        str: A probable correct classification for data_point
-    """
-    distances = []
-    for training_point, training_label in zip(training_set, training_labels):
-        distances.append([get_distance(data_point, training_point), training_label])
-
-    # Sort based on distance
-    distances.sort()
-
-    # Get K lowest distances classifications
-    classifications = [i[1] for i in distances[:k]]
+    """ Finds the k nearest neighbour points to data_point from training_set """
+    # Get nearest labels to data_point
+    classifications = get_nearest_labels(tuple(data_point), tuple(map(tuple, training_set)), training_labels)
 
     # Return most common classification
-    return Counter(classifications).most_common(1)[0][0]
+    return Counter(classifications[:k]).most_common(1)[0][0]
+
+
+@lru_cache(maxsize=128)
+def get_nearest_labels(data_point, training_set, training_labels):
+    """ Get labels of points nearest to data_point """
+    # Calculate distance for each training_point
+    distances = [get_distance(data_point, point) for point in training_set]
+
+    # Sort training_labels based on distances
+    return tuple(np.array(training_labels)[np.argsort(distances)])
 
 
 def find_best_k(data_set, data_labels, validation_set, validation_labels):
@@ -106,16 +92,12 @@ def find_best_k(data_set, data_labels, validation_set, validation_labels):
         for validation_point in validation_set:
             classifications.append(k_nearest_neighbour(k, validation_point,
                                                        data_set, data_labels))
-        matches = 0
-        for knn_classification, real_classification in zip(classifications, validation_labels):
-            if knn_classification == real_classification:
-                matches += 1
-        result = (matches / len(validation_labels)) * 100
-        print(k, result)
+        result = np.mean(np.array(classifications) == np.array(validation_labels)) * 100
+        print(f"k: {k},\taccuracy: {int(result)}%")
         if result > best_value:
             best_value = result
             best_k = k
-    print("best k is {} with a {}% accuracy".format(best_k, best_value))
+    print(f"best k is {best_k} with a {best_value}% accuracy")
     return best_k
 
 
@@ -140,3 +122,4 @@ if __name__ == '__main__':
     season_guesses = [k_nearest_neighbour(best_k, day, validation_set, validation_labels) for day in days]
     print(season_guesses)
 
+    print(f"Exectution took {time.perf_counter()} seconds")

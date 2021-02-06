@@ -3,6 +3,8 @@ from collections import Counter
 import time
 from functools import lru_cache
 
+60, 120
+
 def load_data(filename):
     """ Loads a csv file for use by k_nn
       Args:
@@ -43,29 +45,29 @@ def get_normalisation(data_set):
     return max_values, min_values
 
 
-def normalize(data_set, norm_range):
+def normalize(min_values, max_values, data_set):
     """ Applies norm_range to the data_set to normalize it."""
-    max_values, min_values = norm_range
-    for feature in data_set:
-        for i in range(len(feature)):
-            feature[i] = (feature[i] - min_values[i]) / (max_values[i] - min_values[i])
+    return tuple(tuple((feature - min_values) / (max_values - min_values)) for feature in data_set)
 
 
 def get_distance(point_a, point_b):
     """ Gets distance between 2 points """
-    return np.sum(np.square(np.array(point_a) - np.array(point_b)))
+    distances         = np.array(point_a) - np.array(point_b)
+    squared_distances = np.square(distances)
+    summed_distance   = np.sum(squared_distances)
+    return summed_distance
 
 
 def k_nearest_neighbour(k, data_point, training_set, training_labels):
     """ Finds the k nearest neighbour points to data_point from training_set """
     # Get nearest labels to data_point
-    classifications = get_nearest_labels(tuple(data_point), tuple(map(tuple, training_set)), training_labels)
+    classifications = get_nearest_labels(data_point, training_set, training_labels)
 
     # Return most common classification
     return Counter(classifications[:k]).most_common(1)[0][0]
 
 
-@lru_cache(maxsize=128)
+@lru_cache(maxsize=256)
 def get_nearest_labels(data_point, training_set, training_labels):
     """ Get labels of points nearest to data_point """
     # Calculate distance for each training_point
@@ -87,17 +89,19 @@ def find_best_k(data_set, data_labels, validation_set, validation_labels):
     """
     best_k = 0
     best_value = 0
+
     for k in range(1, len(validation_set)):
-        classifications = []
-        for validation_point in validation_set:
-            classifications.append(k_nearest_neighbour(k, validation_point,
-                                                       data_set, data_labels))
-        result = np.mean(np.array(classifications) == np.array(validation_labels)) * 100
-        print(f"k: {k},\taccuracy: {int(result)}%")
+
+        classifications = [k_nearest_neighbour(k, point, data_set, data_labels) for point in validation_set]
+        result = np.mean(np.array(classifications) == np.array(validation_labels))
+
+        print(f"k: {k},\taccuracy: {round(result * 100) }%")
+
         if result > best_value:
             best_value = result
             best_k = k
-    print(f"best k is {best_k} with a {best_value}% accuracy")
+
+    print(f"best k is {best_k} with a {round(best_value * 100)}% accuracy")
     return best_k
 
 
@@ -107,18 +111,16 @@ if __name__ == '__main__':
     validation_set, validation_labels = load_data(r'validation1.csv')
     days, _ = load_data(r'days.csv')
 
-    # get normalisation range
-    normalize_range = get_normalisation(data_set)
-
-    # normalize sets
-    normalize(data_set, normalize_range)
-    normalize(validation_set, normalize_range)
-    normalize(days, normalize_range)
+    # get normalisation  and apply to dataset
+    min_values, max_values = get_normalisation(validation_set)
+    data_set       = normalize(min_values, max_values, data_set)
+    validation_set = normalize(min_values, max_values, validation_set)
+    days           = normalize(min_values, max_values, days)
 
     # find best k
     best_k = find_best_k(data_set, data_labels, validation_set, validation_labels)
 
-    # Apply best_k to days that we do not have the date of and guess the season.
+    # # Apply best_k to days that we do not have the date of and guess the season.
     season_guesses = [k_nearest_neighbour(best_k, day, validation_set, validation_labels) for day in days]
     print(season_guesses)
 

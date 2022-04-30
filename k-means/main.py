@@ -125,12 +125,12 @@ if __name__ == '__main__':
 
     diff = {}
     for k in range(2,50):
-        cluster_dist=[]
-
         clusters, centroids = k_means(k, data_points)
-        for cluster, centroid in zip(clusters, centroids):
-            cluster_dist.append( sum([get_distance(point, centroid)**2 for point in cluster]))
+        cluster_dist = [sum(get_distance(point, centroid) ** 2 for point in cluster) for cluster, centroid in zip(clusters, centroids)]
+
         diff[k] = np.mean(cluster_dist)
+
+
 
     #Scree Plot
     lists = sorted(diff.items())

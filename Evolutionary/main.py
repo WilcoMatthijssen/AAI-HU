@@ -14,7 +14,7 @@ def fitness(specimen):
 
 def grade(populi):
     """ Gets average fitness of populi. """
-    return sum([fitness(specimen) for specimen in populi]) / len(populi)
+    return sum(fitness(specimen) for specimen in populi) / len(populi)
 
 
 def evolve(populi, retain, random_select, mutate):

@@ -13,13 +13,13 @@ def sigmoid_der(x):
 
 
 class Neuron:
-    def __init__(self, previous_layer=None):
+    def __init__(self, previous_layer=[]):
         """ Set parameters for Neuron (use default params for input layer). """
-        self.previous_layer = previous_layer if previous_layer is not None else []
-        self.weights   = np.random.uniform(-1, 1, len(self.previous_layer))
-        self.bias      = np.random.uniform(-1, 1)
-        self.error     = 0
-        self.output = 0
+        self.previous_layer = previous_layer
+        self.weights = np.random.uniform(-1, 1, len(self.previous_layer))
+        self.bias    = np.random.uniform(-1, 1)
+        self.error   = 0
+        self.output  = 0
 
 
     def feed_forward(self):
@@ -58,20 +58,20 @@ class NeuralNetwork:
 
     def backpropagation(self, desired_output):
         """ Back propagates the error of the hidden and output layers. """
-        for i, layer in enumerate(self.output_layers):
-            layer.error = (desired_output[i] - layer.output) * sigmoid_der(layer.neuron_input)
-
         for i, layer in enumerate(self.hidden_layers):
             error_sum   = sum(output.error * output.weights[i] for output in self.output_layers)
             layer.error = sigmoid_der(layer.neuron_input) * error_sum
+        
+        for i, layer in enumerate(self.output_layers):
+            layer.error = (desired_output[i] - layer.output) * sigmoid_der(layer.neuron_input)
 
 
     def update(self):
         """ Updates weights and bias of hidden and output layers. """
-        for layer in self.output_layers:
+        for layer in self.hidden_layers:
             layer.update(self.learn_rate)
 
-        for layer in self.hidden_layers:
+        for layer in self.output_layers:
             layer.update(self.learn_rate)
 
 
@@ -103,13 +103,15 @@ def normalize(data):
     return (data - min_values) / (max_values - min_values)
 
 
+
+
 if __name__ == "__main__":
     np.random.seed(70)
 
     data, outputs = get_dataset("iris.data")
+    normalized_data = normalize(data)
     serialized_outputs = serialize(outputs)
-    normalized_data    = normalize(data)
-
+    
 
     # learn_rate 0.25600001 and epochs > 5999 = 99.333333333% accurate
     nn = NeuralNetwork(input_layer_size=8, hidden_layer_size=8, output_layers_size=3, learn_rate=0.2)
@@ -117,15 +119,15 @@ if __name__ == "__main__":
 
     print(f"Training took {time.perf_counter():0.2f} seconds")
 
-    guess  = np.array([np.argmax(nn.predict(data_point)) for data_point in normalized_data])
-    actual = np.array([np.argmax(output) for output in serialized_outputs])
-    print(f"NN was: {np.count_nonzero(guess == actual) / len(data) * 100}% correct")
+    correct_predictions = np.all(np.rint([nn.predict(data_point) for data_point in normalized_data]) == serialized_outputs, axis=1)
+    print(f"NN was: {np.count_nonzero(correct_predictions) / len(normalized_data) * 100 :0.1f}% correct")
 
+    
     index = 101
     print(f"\nindex {index} is {outputs[index]}")
     prediction = nn.predict(data[index])
-    print(f"{prediction[0] * 100 :0.0f}% Iris-Setosa")
-    print(f"{prediction[1] * 100 :0.0f}% Iris-Versicolor")
-    print(f"{prediction[2] * 100 :0.0f}% Iris-Virginica\n")
+    print(f"{prediction[0] * 100 :0.1f}% Iris-Setosa")
+    print(f"{prediction[1] * 100 :0.1f}% Iris-Versicolor")
+    print(f"{prediction[2] * 100 :0.1f}% Iris-Virginica\n")
 
 

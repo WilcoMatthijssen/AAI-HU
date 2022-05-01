@@ -89,7 +89,7 @@ class NeuralNetwork:
 def progress_bar(current, total):
     percent = 100 * current // total
     bar = '█' * percent + '-' * (100 - percent)
-    print(f"\rProgress: |{bar}| {percent:.2f}%", end='\r')
+    print(f"\rProgress: |{bar}| {percent:.2f}%", end=' ')
 
 def get_dataset(filename):
     """ Load data and outputs from file. """

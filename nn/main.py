@@ -77,12 +77,19 @@ class NeuralNetwork:
 
     def train(self, input_data, desired_output, epochs):
         """ Trains layers with input_data and desired_output to get to classify similar data correctly times epochs. """
-        for _ in range(epochs):
+        for i in range(epochs):
+            progress_bar(i, epochs-1)
             for data_in, data_out in zip(input_data, desired_output):
                 self.predict(data_in)
                 self.backpropagation(data_out)
                 self.update()
 
+
+
+def progress_bar(current, total):
+    percent = 100 * current // total
+    bar = '█' * percent + '-' * (100 - percent)
+    print(f"\rProgress: |{bar}| {percent:.2f}%", end='\r')
 
 def get_dataset(filename):
     """ Load data and outputs from file. """
@@ -103,19 +110,33 @@ def normalize(data):
     return (data - min_values) / (max_values - min_values)
 
 
+def shuffle(data, outputs):
+    shuffle_index = np.arange(data.shape[0])
+    np.random.shuffle(shuffle_index)
+    return data[shuffle_index], outputs[shuffle_index]
 
+def split_by_percentage(array, percentage):
+
+    return array[:int(array.shape[0] * percentage)], array[int(array.shape[0] * percentage):]
 
 if __name__ == "__main__":
-    np.random.seed(70)
+    np.random.seed(30)
 
     data, outputs = get_dataset("iris.data")
+    # data, outputs = shuffle(data, outputs) # shuffling gives worse results
+
     normalized_data = normalize(data)
     serialized_outputs = serialize(outputs)
-    
 
-    # learn_rate 0.25600001 and epochs > 5999 = 99.333333333% accurate
-    nn = NeuralNetwork(input_layer_size=8, hidden_layer_size=8, output_layers_size=3, learn_rate=0.2)
-    nn.train(input_data=normalized_data, desired_output=serialized_outputs, epochs=100)
+
+    # overfitting fix
+    train_data, test_data     = split_by_percentage(normalized_data, 0.85)
+    train_output, test_output = split_by_percentage(serialized_outputs, 0.85)
+
+
+
+    nn = NeuralNetwork(input_layer_size=4, hidden_layer_size=8, output_layers_size=3, learn_rate=0.1337)
+    nn.train(input_data=train_data, desired_output=train_output, epochs=1337)
 
     print(f"Training took {time.perf_counter():0.2f} seconds")
 
@@ -123,7 +144,7 @@ if __name__ == "__main__":
     print(f"NN was: {np.count_nonzero(correct_predictions) / len(normalized_data) * 100 :0.1f}% correct")
 
     
-    index = 101
+    index = 40
     print(f"\nindex {index} is {outputs[index]}")
     prediction = nn.predict(data[index])
     print(f"{prediction[0] * 100 :0.1f}% Iris-Setosa")
